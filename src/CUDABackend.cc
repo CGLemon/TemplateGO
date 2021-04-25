@@ -115,9 +115,9 @@ void CUDAbackend::worker() {
 
             std::unique_lock<std::mutex> lock(m_mutex);
             int waittime = m_waittime.load();
-            bool timeout = m_cv.wait_for(lock, std::chrono::milliseconds(waittime),
-                                             [this](){ return m_forward_queue.size() < 
-                                                                   (size_t)option<int>("batchsize"); }
+            bool timeout = !m_cv.wait_for(lock, std::chrono::milliseconds(waittime),
+                                              [this](){ return !(m_forward_queue.size() < 
+                                                                   (size_t)option<int>("batchsize")); }
                                          );
             if (!m_forward_queue.empty()) {
                 if (timeout && m_narrow_pipe.exchange(true) == false) {
